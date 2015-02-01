@@ -44,7 +44,7 @@ protected:
     virtual void resizeGL(int, int);
     virtual void paintGL();
 
-    bool initializeOgre(std::string, std::string, std::string);
+    bool initializeOgre();
 
     virtual Ogre::RenderSystem *chooseRenderer(const Ogre::RenderSystemList& );
 

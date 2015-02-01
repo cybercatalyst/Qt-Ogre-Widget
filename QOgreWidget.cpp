@@ -23,11 +23,9 @@
 #include <QX11Info>
 #include <QDebug>
 
-bool QOgreWidget::initializeOgre(std::string plugins_file,
-                        std::string ogre_cfg_file,
-                        std::string ogre_log) {
+bool QOgreWidget::initializeOgre() {
     // create the main ogre object
-    _ogreRoot = new Ogre::Root( plugins_file, ogre_cfg_file, ogre_log );
+    _ogreRoot = new Ogre::Root();
 
 
     // setup a renderer
@@ -55,7 +53,7 @@ bool QOgreWidget::initializeOgre(std::string plugins_file,
 }
 
 void QOgreWidget::initializeGL() {
-    if(!initializeOgre("../bin/plugins.cfg", "../bin/ogre.cfg", "../bin/ogre.log")) {
+    if(!initializeOgre()) {
         return;
     }
 
