@@ -1,74 +1,43 @@
-#ifndef QOGREWIDGET_H
-#define QOGREWIDGET_H
+#ifndef __OGREWIDGET_H__
+#define __OGREWIDGET_H__
 
-#include "PreProcessor.h"
-#include "WindowEventListener.h"
-#include "QOgreWindow.h"
+#include <OGRE/Ogre.h>
+#include <QGLWidget>
+#include <QX11Info>
 
-namespace QtOgre {
+class QOgreWidget : public QGLWidget
+{
+  //Q_OBJECT;
 
-/**
- * @brief Qt widget class that can host an Ogre Rendering window
- */
-class QOgreWidget : public QWidget {
-	Q_OBJECT
-public:
-	/**
-	 * @brief QOgreWidget
-	 * @param parent Parent widget/window
-	 * @param windowEvent Callback for window events
-	 * @param setupEvent Callback for setup events
-	 */
-	QOgreWidget(QWidget *parent, WindowEventListener* windowEvent);
-	virtual ~QOgreWidget();
+ public:
+  QOgreWidget( QWidget *parent=0 ):
+    QGLWidget( parent ),
+    mOgreWindow(NULL)
+    {
+      init( "../bin/plugins.cfg", "../bin/ogre.cfg", "../bin/ogre.log" );
+    }
 
-	/**
-	 * @brief createRenderWindow Create the rendering window and attach it to this widget
-	 */
-	void createRenderWindow();
+  virtual ~QOgreWidget()
+    {
+      mOgreRoot->shutdown();
+      delete mOgreRoot;
+      destroy();
+    }
 
-	/**
-	 * @brief calculateMouseCenter Calculate the mouse center position. Stored internally!
-	 */
-	void calculateMouseCenter();
+ protected:
+  virtual void initializeGL();
+  virtual void resizeGL( int, int );
+  virtual void paintGL();
 
-	/**
-	 * @brief getWindowHandle Get the window handle for this widget, denpending on OS
-	 * @return Window handle to this widget
-	 */
-	Ogre::String getWindowHandle() const;
+  void init( std::string, std::string, std::string );
 
-	/**
-	 * @brief getRenderOptions Return render options that are needed to create the Ogre rendering window
-	 * @return Associative list of options
-	 */
-	Ogre::NameValuePairList getRenderOptions() const;
+  virtual Ogre::RenderSystem *chooseRenderer(const Ogre::RenderSystemList& );
 
-	// Qt funcction
-	virtual void paintEvent(QPaintEvent* pEvent);
-	virtual void resizeEvent(QResizeEvent* rEvent);
-	virtual void mouseMoveEvent(QMouseEvent *event);
-	virtual QPaintEngine* paintEngine() const;
-private:
-	/**
-	 * @brief renderWindow Contains a refernce to the rendering window from the createRenderWindow call
-	 */
-	Ogre::RenderWindow *renderWindow;
-	/**
-	 * @brief mouseCenter Contains the mouse center coordinates
-	 */
-	QPoint mouseCenter;
-	/**
-	 * @brief windowEvent Listener for action events
-	 */
-	WindowEventListener* windowEvent;
-
-	// Disable copying of this object, Qt::Widget doesnt allow it!
-	inline QOgreWidget(const QOgreWidget &widget) {
-		throw std::runtime_error("Not allowed to copy QOgreWidget");
-	}
+  Ogre::Root *mOgreRoot;
+  Ogre::RenderWindow *mOgreWindow;
+  Ogre::Camera *mCamera;
+  Ogre::Viewport *mViewport;
+  Ogre::SceneManager *mSceneMgr;
 };
 
-}
-
-#endif // QOGREWIDGET_H
+#endif

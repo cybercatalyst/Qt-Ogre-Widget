@@ -1,18 +1,13 @@
+QT += widgets opengl x11extras
 TEMPLATE = lib
 
 CONFIG += staticlib flat
 TARGET = qogrewidget
 
 SOURCES += \
-  QOgreWidget.cpp \
-  QOgreWindow.cpp
-
+  QOgreWidget.cpp
     
 HEADERS += \
-  PreProcessor.h \
-  QOgreWidget.h \
-  QtOgre.h \
-  QOgreApplication.h \
-  QOgreWindow.h \
-  WindowEventListener.h
+  QOgreWidget.h
+
 
