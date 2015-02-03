@@ -1,65 +1,65 @@
-// Permission is hereby granted, free of charge, to any person obtaining a
-// copy of this software and associated documentation files (the "Software"),
-// to deal in the Software without restriction, including without limitation
-// the rights to use, copy, modify, merge, publish, distribute, sublicense,
-// and/or sell copies of the Software, and to permit persons to whom the
-// Software is furnished to do so, subject to the following conditions:
-//
-// The above copyright notice and this permission notice shall be included in
-// all copies or substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-// DEALINGS IN THE SOFTWARE.
+////////////////////////////////////////////////////////////////////////////////
+//                                                                            //
+// This file is part of QtOgreWidget.                                         //
+// Copyright (c) 2015 Jacob Dawid <jacob@omg-it.works>                        //
+//                                                                            //
+// QtOgreWidget is free software: you can redistribute it and/or              //
+// modify it under the terms of the GNU Affero General Public License as      //
+// published by the Free Software Foundation, either version 3 of the         //
+// License, or (at your option) any later version.                            //
+//                                                                            //
+// QtOgreWidget is distributed in the hope that it will be useful,            //
+// but WITHOUT ANY WARRANTY; without even the implied warranty of             //
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the              //
+// GNU Affero General Public License for more details.                        //
+//                                                                            //
+// You should have received a copy of the GNU Affero General Public           //
+// License along with QtOgreWidget.                                           //
+// If not, see <http://www.gnu.org/licenses/>.                                //
+//                                                                            //
+////////////////////////////////////////////////////////////////////////////////
 
 // Own includes
 #include "ogrewidget.h"
 
 // Qt includes
-#include <QX11Info>
 #include <QDebug>
 
-bool OgreWidget::initializeOgre() {
-    // create the main ogre object
-    _ogreRoot = new Ogre::Root();
+OgreWidget::OgreWidget(QWidget *parent)
+    : QGLWidget(parent),
+    _ogreWindow(0) {
+}
 
-
-    // setup a renderer
-    const Ogre::RenderSystemList& renderers = _ogreRoot->getAvailableRenderers();
-    if(renderers.empty()) {
-        qDebug() << "No renderer available for OGRE.";
-        return false;
-    }
-
-    // initialize without creating window
-    Ogre::RenderSystem* renderSystem = chooseRenderer(renderers);
-    if(!renderSystem) {
-        qDebug() << "Supplied a null render system to OGRE.";
-        return false;
-    }
-
-    _ogreRoot->setRenderSystem(renderSystem);
-    _ogreRoot->getRenderSystem()->setConfigOption("Video Mode", QString("%1x%2").arg(width()).arg(height()).toStdString());
-    _ogreRoot->getRenderSystem()->setConfigOption("Full Screen", "No");
-    _ogreRoot->saveConfig();
-
-     // don't create a window
-    _ogreRoot->initialise(false);
-    return true;
+OgreWidget::~OgreWidget() {
+    _ogreRoot->shutdown();
+    delete _ogreRoot;
 }
 
 void OgreWidget::initializeGL() {
-    if(!initializeOgre()) {
+    _ogreRoot = new Ogre::Root();
+
+    const Ogre::RenderSystemList& renderers = _ogreRoot->getAvailableRenderers();
+    if(renderers.empty()) {
+        qDebug() << "No renderer available for OGRE.";
         return;
     }
 
-    //== Creating and Acquiring Ogre Window ==//
+    Ogre::RenderSystem* renderSystem = chooseRenderer(renderers);
+    if(!renderSystem) {
+        qDebug() << "Supplied a null renderer to OGRE.";
+        return;
+    }
 
-    // Get the parameters of the window QT created
+    _ogreRoot->setRenderSystem(renderSystem);
+    _ogreRoot->getRenderSystem()->setConfigOption("Video Mode",
+                                                  QString("%1x%2")
+                                                  .arg(width())
+                                                  .arg(height())
+                                                  .toStdString());
+    _ogreRoot->getRenderSystem()->setConfigOption("Full Screen", "No");
+    _ogreRoot->saveConfig();
+    _ogreRoot->initialise(false);
+
     Ogre::String windowHandle;
 #ifdef WIN32
     // Windows code
@@ -77,14 +77,10 @@ void OgreWidget::initializeGL() {
 #endif
 
     Ogre::NameValuePairList params;
-#ifndef MACOS
-    // code for Windows and Linux
+#ifndef Q_OS_MAC
     params["parentWindowHandle"] = windowHandle;
-    _ogreWindow = _ogreRoot->createRenderWindow( "QOgreWidget_RenderWindow",
-                                                 this->width(),
-                                                 this->height(),
-                                                 false,
-                                                 &params );
+    _ogreWindow = _ogreRoot->createRenderWindow("QOgreWidget_RenderWindow",
+                                                width(), height(), false, &params);
 
     _ogreWindow->setActive(true);
     WId ogreWinId = 0x0;
@@ -102,7 +98,6 @@ void OgreWidget::initializeGL() {
     setGeometry(geometry);
 
 #else
-    // code for Mac
     params["externalWindowHandle"] = windowHandle;
     params["macAPI"] = "cocoa";
     params["macAPICocoaUseNSView"] = "true";
@@ -112,32 +107,30 @@ void OgreWidget::initializeGL() {
     makeCurrent();
 #endif
 
-    setAttribute( Qt::WA_PaintOnScreen, true );
-    setAttribute( Qt::WA_NoBackground );
+    setAttribute(Qt::WA_PaintOnScreen, true);
+    setAttribute(Qt::WA_NoBackground);
 
-    //== Ogre Initialization ==//
     Ogre::SceneType sceneType = Ogre::ST_EXTERIOR_CLOSE;
 
-    _sceneManager = _ogreRoot->createSceneManager( sceneType );
-    _sceneManager->setAmbientLight( Ogre::ColourValue(1,1,1) );
+    _sceneManager = _ogreRoot->createSceneManager(sceneType);
+    _sceneManager->setAmbientLight(Ogre::ColourValue(1, 1, 1));
 
-    _camera = _sceneManager->createCamera( "QOgreWidget_Cam" );
-    _camera->setPosition( Ogre::Vector3(0,1,0) );
-    _camera->lookAt( Ogre::Vector3(0,0,0) );
-    _camera->setNearClipDistance( 1.0 );
+    _camera = _sceneManager->createCamera("QOgreWidget_Cam");
+    _camera->setPosition(Ogre::Vector3(0, 1, 0));
+    _camera->lookAt(Ogre::Vector3(0, 0, 0));
+    _camera->setNearClipDistance(1.0);
 
     _viewport = _ogreWindow->addViewport(_camera);
-    _viewport->setBackgroundColour(Ogre::ColourValue( 0.8,0.8,1 ));
+    _viewport->setBackgroundColour(Ogre::ColourValue(0.8, 0.8, 1));
 }
 
 void OgreWidget::paintGL() {
-    // Be sure to call "OgreWidget->repaint();" to call paintGL
     if(_ogreRoot && _ogreWindow) {
         _ogreRoot->renderOneFrame();
     }
 }
 
-void OgreWidget::resizeGL( int width, int height ) {
+void OgreWidget::resizeGL(int width, int height) {
     Q_UNUSED(width);
     Q_UNUSED(height);
     if(_ogreWindow) {
