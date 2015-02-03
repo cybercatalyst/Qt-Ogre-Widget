@@ -17,13 +17,13 @@
 // DEALINGS IN THE SOFTWARE.
 
 // Own includes
-#include "QOgreWidget.h"
+#include "ogrewidget.h"
 
 // Qt includes
 #include <QX11Info>
 #include <QDebug>
 
-bool QOgreWidget::initializeOgre() {
+bool OgreWidget::initializeOgre() {
     // create the main ogre object
     _ogreRoot = new Ogre::Root();
 
@@ -52,7 +52,7 @@ bool QOgreWidget::initializeOgre() {
     return true;
 }
 
-void QOgreWidget::initializeGL() {
+void OgreWidget::initializeGL() {
     if(!initializeOgre()) {
         return;
     }
@@ -130,14 +130,14 @@ void QOgreWidget::initializeGL() {
     _viewport->setBackgroundColour(Ogre::ColourValue( 0.8,0.8,1 ));
 }
 
-void QOgreWidget::paintGL() {
+void OgreWidget::paintGL() {
     // Be sure to call "OgreWidget->repaint();" to call paintGL
     if(_ogreRoot && _ogreWindow) {
         _ogreRoot->renderOneFrame();
     }
 }
 
-void QOgreWidget::resizeGL( int width, int height ) {
+void OgreWidget::resizeGL( int width, int height ) {
     Q_UNUSED(width);
     Q_UNUSED(height);
     if(_ogreWindow) {
@@ -145,7 +145,7 @@ void QOgreWidget::resizeGL( int width, int height ) {
     }
 }
 
-Ogre::RenderSystem* QOgreWidget::chooseRenderer(const Ogre::RenderSystemList& renderers) {
+Ogre::RenderSystem* OgreWidget::chooseRenderer(const Ogre::RenderSystemList& renderers) {
     // Default implementation chooses first renderer.
     // Override to do something different.
     return *renderers.begin();

@@ -23,17 +23,20 @@
 
 // Qt includes
 #include <QGLWidget>
-#include <QX11Info>
 
-class QOgreWidget : public QGLWidget {
+#ifdef Q_OS_UNIX
+#include <QX11Info>
+#endif
+
+class OgreWidget : public QGLWidget {
     Q_OBJECT
 public:
-    QOgreWidget(QWidget *parent = 0):
+    OgreWidget(QWidget *parent = 0):
         QGLWidget(parent),
         _ogreWindow(0) {
     }
 
-    virtual ~QOgreWidget() {
+    virtual ~OgreWidget() {
         _ogreRoot->shutdown();
         delete _ogreRoot;
         destroy();
